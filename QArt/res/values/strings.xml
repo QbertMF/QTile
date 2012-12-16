@@ -1,0 +1,11 @@
+<resources>
+
+    <string name="app_name">QActionBar3</string>
+    <string name="title_section3">Touch Picture</string>
+    <string name="title_section2">Select Effect</string>
+    <string name="title_section1">Select Picture</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="menu_settings">Settings</string>
+    <string name="title_activity_main">MainActivity</string>
+
+</resources>
