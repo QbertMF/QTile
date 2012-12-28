@@ -4,9 +4,11 @@ import java.util.Random;
 
 import android.app.Activity;
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Rect;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
 import android.os.Bundle;
@@ -32,6 +34,8 @@ public class QSectionSurfaceView extends SherlockFragment{
 
 	private FastRenderView renderView;
 	private Activity mActivity;
+	
+	private int[][] mMap;
 
     /* (non-Javadoc)
 	 * @see android.support.v4.app.Fragment#onDestroy()
@@ -173,7 +177,102 @@ public class QSectionSurfaceView extends SherlockFragment{
 		 */
 		
 		protected void onStart(){
-			Log.w(this.getClass().getName(), "FastRenderView.onStart");			
+			Log.w(this.getClass().getName(), "FastRenderView.onStart");
+			MainActivity activity = (MainActivity)getActivity();
+			
+			mMap = createMap(activity.getDifficulty());
+			shuffelMap(mMap, 100);			
+		}
+		
+		private int[][] createMap(int difficulty){
+			
+			int tiles;
+			switch (difficulty){
+			case 0:
+				tiles = 5;
+				break;
+			case 1:
+				tiles = 10;
+				break;
+			default:
+				tiles = 15;
+				break;
+			}
+			int[][] myMap = new int[tiles][tiles];
+			
+			int curTile = 0;
+			for (int x=0;x<tiles;x++){
+				for (int y=0;y<tiles;y++){
+					myMap[x][y] = curTile;
+					curTile++;
+				}				
+			}
+			
+			myMap[tiles-1][tiles-1] = -1;
+			
+			return myMap;
+		}
+
+		private void shuffelMap(int[][] map, int iterations){
+			for (int i=0; i<iterations; i++){
+
+				int size = map[0].length;
+				
+				boolean found = false;
+				int x = 0;
+				int y = 0;
+
+				for (int z=0;z<(size*size);z++){
+					x = z % size;
+					y = z / size;
+					if (map[x][y] == -1){
+						break;
+					}
+				}
+				
+				// x and y contain the empty tile position
+				int dir = rand.nextInt(4);
+				
+				switch (dir){
+				case 0:
+					// top
+					swapMapTiles(map, x, y, x, y-1);
+					break;
+				case 1:
+					// right
+					swapMapTiles(map, x, y, x+1, y);
+					break;
+				case 2:
+					// bottom
+					swapMapTiles(map, x, y, x, y+1);
+					break;
+				case 3:
+					// left
+					swapMapTiles(map, x, y, x-1, y);
+					break;
+				}
+			}
+		}
+		
+		/**
+		 * Copy map tile from x1, y1 to x2, y2. If the source
+		 * is outside the map no action is performed. The tiles
+		 * are not swapped.
+		 * @param map
+		 * @param x1
+		 * @param y1
+		 * @param x2
+		 * @param y2
+		 */
+		private void swapMapTiles(int[][] map, 
+				                  int x1, int y1, 
+				                  int x2, int y2){
+			int size = map[0].length;
+
+			if ((x2>=0) && (x2<size) && (y2>=0) && (y2<size)) {
+				map[x1][y1] = map[x2][y2];
+				map [x2][y2] = -1;
+			}
 		}
 		
 		protected void onReStart(){
@@ -216,7 +315,7 @@ public class QSectionSurfaceView extends SherlockFragment{
 				try {
 					_surfaceHolderCanvas = _surfaceHolder.lockCanvas(null);
 					synchronized (_surfaceHolder) {
-						//updateInputs();
+						updateInputs();
 						
 						updatePhysics();
 						
@@ -280,7 +379,108 @@ public class QSectionSurfaceView extends SherlockFragment{
 			canvas.drawText(String.valueOf(_screenWidth), 20, 60, _textPaint);
 
 			canvas.drawText(String.valueOf(_fps), 20, 80, _textPaint);
+			
+			doDrawTiles(canvas);
+		}
+		
+		private void updateInputs(){
+			MainActivity activity = (MainActivity)getActivity();
+			int numTiles = mMap[0].length;
 
+			int viewHeight = this.getHeight();
+			int viewWidth = this.getWidth();
+			
+			int tileWidth = viewWidth / numTiles;
+			int tileHeight = viewHeight / numTiles;
+					
+			Bitmap bmp = activity.getSelectedImageBitmap();
+			int bmpHeight = bmp.getHeight();
+			int bmpWidth = bmp.getWidth();
+			
+			float xFactor = (float)viewWidth / (float)bmpWidth;
+			float yFactor = (float)viewHeight / (float)bmpHeight;			
+
+			if (_touched[0] == true){
+				
+				int x = _touchX[0] / tileWidth;
+				int y = _touchY[0] / tileHeight;
+					
+				// Check if -1 is above
+				if  ((y-1 >= 0) && (mMap[x][y-1] == -1)){
+					swapMapTiles(mMap, x, y-1, x, y); 
+				}
+				// Check if -1 is below
+				if  ((y+1 < numTiles) && (mMap[x][y+1] == -1)){
+					swapMapTiles(mMap, x, y+1, x, y); 
+				}
+				// Check if -1 is left
+				if  ((x-1 >= 0) && (mMap[x-1][y] == -1)){
+					swapMapTiles(mMap, x-1, y, x, y); 
+				}
+				// Check if -1 is right
+				if  ((x+1 < numTiles) && (mMap[x+1][y] == -1)){
+					swapMapTiles(mMap, x+1, y, x, y); 
+				}
+			}
+		}
+		
+		private void doDrawTiles(Canvas canvas){
+			// Draw the tiles
+			
+			int viewHeight = this.getHeight();
+			int viewWidth = this.getWidth();
+			
+			MainActivity activity = (MainActivity)getActivity();
+			int numTiles = mMap[0].length;
+			
+			Bitmap bmp = activity.getSelectedImageBitmap();
+			int bmpHeight = bmp.getHeight();
+			int bmpWidth = bmp.getWidth();
+			
+			float xFactor = (float)viewWidth / (float)bmpWidth;
+			float yFactor = (float)viewHeight / (float)bmpHeight;			
+			
+			int tileWidth = bmpWidth / numTiles;
+			int tileHeight = bmpHeight / numTiles;
+			
+			Rect rectScreen = new Rect();
+			Rect rectAtlas = new Rect();
+			
+			boolean isEmpty;
+			
+			if (mMap != null){
+				int size = mMap[0].length;
+				for (int x=0;x<size;x++){
+					for (int y=0;y<size;y++){
+						
+						int tile = mMap[x][y];
+						
+						isEmpty = (tile == -1)?true:false;
+						
+						if (!isEmpty){
+							int sX = tile % size;
+							int sY = tile / size;
+							rectAtlas.top = sY * tileHeight;
+							rectAtlas.bottom = sY * tileHeight + tileHeight;
+							rectAtlas.left = sX * tileWidth;
+							rectAtlas.right = sX * tileWidth + tileWidth;
+						}
+						
+						rectScreen.top = (int)((float)(y*tileHeight) * yFactor);
+						rectScreen.bottom = (int)((float)(y*tileHeight + tileHeight) * yFactor);
+						rectScreen.left = (int)((float)(x*tileWidth) * xFactor);
+						rectScreen.right = (int)((float)(x*tileWidth + tileWidth) * xFactor);
+						
+						if (isEmpty)
+							canvas.drawRect(rectScreen, _backgroundPaint);
+						else
+							canvas.drawBitmap(bmp, rectAtlas, rectScreen, null);
+
+						canvas.drawText(String.valueOf(mMap[x][y]), 
+								rectScreen.left, rectScreen.top+10, _textPaint);
+					}
+				}
+			}
 		}
 		
 		private void doProcess(){

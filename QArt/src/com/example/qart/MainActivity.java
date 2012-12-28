@@ -1,11 +1,16 @@
 package com.example.qart;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.util.Log;
+import android.view.Display;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -22,11 +27,44 @@ public class MainActivity extends SherlockFragmentActivity implements ActionBar.
 
 	public static final int REQUEST_CHOOSE_IMAGE  = 1;
 	
+	private int mDifficulty = 0;
+	
+    public static final String[] SELECTION = 
+    {
+            "Easy",   
+            "Medium",
+            "Difficult" 
+    };
 	// will be set when chooser activity returns
 //	private String mSelectedImagePath;
 	
     private Uri mSelectedImageUri;
+
+    private Bitmap mSelectedImageBitmap;
+
     
+	/**
+	 * @return the mSelectedImageBitmap
+	 */
+	public Bitmap getSelectedImageBitmap() {
+		return mSelectedImageBitmap;
+	}
+
+
+	/**
+	 * @return the mDifficulty
+	 */
+	public int getDifficulty() {
+		return mDifficulty;
+	}
+
+	/**
+	 * @param mDifficulty the mDifficulty to set
+	 */
+	public void setDifficulty(int mDifficulty) {
+		this.mDifficulty = mDifficulty;
+	}
+
 	/**
 	 * @return the mSelectedImageUri
 	 */
@@ -39,7 +77,31 @@ public class MainActivity extends SherlockFragmentActivity implements ActionBar.
 	 */
 	public void setSelectedImageUri(Uri mSelectedImageUri) {
 		this.mSelectedImageUri = mSelectedImageUri;
+		this.mSelectedImageBitmap = loadBitmap(mSelectedImageUri);
 	}
+	
+	  private Bitmap loadBitmap(Uri imageFileUri) {
+		    Display currentDisplay = getWindowManager().getDefaultDisplay();
+
+		    float dw = currentDisplay.getWidth();
+		    float dh = currentDisplay.getHeight();
+
+		    Bitmap returnBmp = Bitmap.createBitmap((int) dw, (int) dh,
+		        Bitmap.Config.ARGB_4444);
+		    try {
+		      BitmapFactory.Options bmpFactoryOptions = new BitmapFactory.Options();
+		      bmpFactoryOptions.inJustDecodeBounds = true;
+		      returnBmp = BitmapFactory.decodeStream(getContentResolver().openInputStream(imageFileUri), null, bmpFactoryOptions);
+		      bmpFactoryOptions.inSampleSize = 2;
+		      bmpFactoryOptions.inJustDecodeBounds = false;
+		      returnBmp = BitmapFactory.decodeStream(getContentResolver()
+		          .openInputStream(imageFileUri), null, bmpFactoryOptions);
+		    } catch (Exception e) {
+		      Log.v("ERROR", e.toString());
+		    }
+		    return returnBmp;
+		  }
+
 	
     /**
      * The {@link android.support.v4.view.PagerAdapter} that will provide fragments for each of the
@@ -47,7 +109,8 @@ public class MainActivity extends SherlockFragmentActivity implements ActionBar.
      * keep every loaded fragment in memory. If this becomes too memory intensive, it may be best
      * to switch to a {@link android.support.v4.app.FragmentStatePagerAdapter}.
      */
-    SectionsPagerAdapter mSectionsPagerAdapter;
+      SectionsPagerAdapter mSectionsPagerAdapter;
+//    FragmentStatePagerAdapter mSectionsPagerAdapter;
 
     /**
      * The {@link ViewPager} that will host the section contents.
@@ -72,6 +135,8 @@ public class MainActivity extends SherlockFragmentActivity implements ActionBar.
         // of the app.
         mSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
 
+//        mSectionsPagerAdapter = new FragmentStatePagerAdapter(getSupportFragmentManager());
+        
         // Set up the action bar.
         final ActionBar actionBar = getSupportActionBar();
         actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
@@ -133,15 +198,15 @@ public class MainActivity extends SherlockFragmentActivity implements ActionBar.
         	case 2:
                 Fragment fragmentTwo = new QSectionSurfaceView();
                 Bundle argsSecTwo = new Bundle();
-                argsSecTwo.putInt(DummySectionFragment.ARG_SECTION_NUMBER, i + 1);
+                argsSecTwo.putInt(QSectionSurfaceView.ARG_SECTION_NUMBER, i + 1);
                 fragmentTwo.setArguments(argsSecTwo);
                 return fragmentTwo;        		
         	default:
-        		Fragment fragment2 = new DummySectionFragment();
+        		Fragment fragmentThree = new QSectionList();
         		Bundle argsSecThree = new Bundle();
-        		argsSecThree.putInt(DummySectionFragment.ARG_SECTION_NUMBER, i + 1);
-        		fragment2.setArguments(argsSecThree);
-        		return fragment2;
+        		argsSecThree.putInt(QSectionList.ARG_SECTION_NUMBER, i + 1);
+        		fragmentThree.setArguments(argsSecThree);
+        		return fragmentThree;
         	} 	
         }
 
@@ -161,32 +226,23 @@ public class MainActivity extends SherlockFragmentActivity implements ActionBar.
         }
     }
 
-    /**
-     * A dummy fragment representing a section of the app, but that simply displays dummy text.
-     */
-    public static class DummySectionFragment extends SherlockFragment {
-        public DummySectionFragment() {
-        }
-
-        public static final String ARG_SECTION_NUMBER = "section_number";
-
-        @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                Bundle savedInstanceState) {
-            TextView textView = new TextView(getActivity());
-            textView.setGravity(Gravity.CENTER);
-            Bundle args = getArguments();
-            textView.setText(Integer.toString(args.getInt(ARG_SECTION_NUMBER)));
-            return textView;
-        }
-    }
-
 	@Override
 	public void onTabSelected(Tab tab,
 			android.support.v4.app.FragmentTransaction ft) {
 		// TODO Auto-generated method stub
         mViewPager.setCurrentItem(tab.getPosition());
-		
+        
+//        boolean found = true;
+//        QSectionList mySection = null;
+//        try{
+//        	mySection = (QSectionList)mSectionsPagerAdapter.getItem(tab.getPosition());
+//        }catch (ClassCastException e){
+//        	found = false;
+//        }
+//        
+////        if (found && (mySection != null)){
+////        	mySection.invalidate();
+////        }
 	}
 
 	@Override
