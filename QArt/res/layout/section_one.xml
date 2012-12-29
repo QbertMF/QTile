@@ -7,7 +7,13 @@
         android:id="@+id/btnLoadImage"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Load" />
+        android:text="@string/button_load_picture" />
+
+    <Button
+        android:id="@+id/btnRandomImage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/button_random_picture" />
     
     <ImageView
         android:id="@+id/imageView"

@@ -27,16 +27,106 @@ import android.view.View.OnTouchListener;
 import android.widget.TextView;
 
 import com.actionbarsherlock.app.SherlockFragment;
+import com.actionbarsherlock.view.Menu;
+import com.actionbarsherlock.view.MenuInflater;
+import com.actionbarsherlock.view.MenuItem;
 
 public class QSectionSurfaceView extends SherlockFragment{
+
+    // Constants
+    static final int SHUFFEL_ITERATIONS = 100;
+
+    static final int STATE_NORMAL = 1;
+    static final int STATE_HINT = 2;
+
+    // Menu identifiers
+    static final int RESTART_ID = Menu.FIRST;
+    static final int HINT_ID = Menu.FIRST+1;
 
 	public static final String ARG_SECTION_NUMBER = "section_number";
 
 	private FastRenderView renderView;
 	private Activity mActivity;
 	
+	private int mState = STATE_NORMAL;
+	
 	private int[][] mMap;
 
+	/* (non-Javadoc)
+	 * @see android.support.v4.app.Fragment#onActivityCreated(android.os.Bundle)
+	 */
+	@Override
+	public void onActivityCreated(Bundle savedInstanceState) {
+
+		// We have a menu item to show in action bar.
+        setHasOptionsMenu(true);
+
+		super.onActivityCreated(savedInstanceState);
+	}
+
+	//-------------------------------------
+	// GETTER AND SETTER
+	//-------------------------------------
+
+	/**
+	 * @return the mState
+	 */
+	public int getState() {
+		return mState;
+	}
+
+	/**
+	 * @param mState the mState to set
+	 */
+	public void setState(int mState) {
+		this.mState = mState;
+	}
+	
+	//-------------------------------------
+	// OPTIONS MENU
+	//-------------------------------------
+
+	/* (non-Javadoc)
+	 * @see com.actionbarsherlock.app.SherlockFragment#onCreateOptionsMenu(com.actionbarsherlock.view.Menu, com.actionbarsherlock.view.MenuInflater)
+	 */
+	@Override
+	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        MenuItem populateItem = menu.add(Menu.NONE, RESTART_ID, 0, "Restart");
+        populateItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
+        MenuItem clearItem = menu.add(Menu.NONE, HINT_ID, 0, "Hint");
+        clearItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
+	}
+
+	/* (non-Javadoc)
+	 * @see com.actionbarsherlock.app.SherlockFragment#onPrepareOptionsMenu(com.actionbarsherlock.view.Menu)
+	 */
+	@Override
+	public void onPrepareOptionsMenu(Menu menu) {
+		// TODO Auto-generated method stub
+		super.onPrepareOptionsMenu(menu);
+	}
+
+	/* (non-Javadoc)
+	 * @see com.actionbarsherlock.app.SherlockFragment#onOptionsItemSelected(com.actionbarsherlock.view.MenuItem)
+	 */
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+
+    switch (item.getItemId()) {
+    	case RESTART_ID:
+    		renderView.shuffelMap(mMap, SHUFFEL_ITERATIONS);
+        	return true;
+    	case HINT_ID:	
+    		if (renderView.get_state() == FastRenderView.STATE_RUNNING)
+    			renderView.set_state(FastRenderView.STATE_SHOWHINT);
+    		else
+    			renderView.set_state(FastRenderView.STATE_RUNNING);
+        	return true;
+    	default:
+        	return super.onOptionsItemSelected(item);
+    	}    
+	}
+	
     /* (non-Javadoc)
 	 * @see android.support.v4.app.Fragment#onDestroy()
 	 */
@@ -100,7 +190,6 @@ public class QSectionSurfaceView extends SherlockFragment{
 		super.onCreate(savedInstanceState);		
 	}
 
-
 	/****************************************
 	 * FastRenderView Class
 	 ****************************************/	
@@ -120,10 +209,12 @@ public class QSectionSurfaceView extends SherlockFragment{
 		public static final int STATE_READY = 3;
 		public static final int STATE_RUNNING = 4;
 		public static final int STATE_WIN = 5;
+		public static final int STATE_SHOWHINT = 6;
         
 		/*
          * Member (state) fields
          */
+		private int _state = STATE_RUNNING;
 		private Thread _renderThread = null;
 		private SurfaceHolder _surfaceHolder;
 		private volatile boolean _threadRunning = false;
@@ -131,6 +222,7 @@ public class QSectionSurfaceView extends SherlockFragment{
 		private int _screenWidth = -1;
 		private Paint _backgroundPaint;
 		private Paint _textPaint;
+		private Paint _numberPaint;
 		private Paint _touchOnePaint;
 		private Paint _touchTwoPaint;
 		private Paint _touchThreePaint;
@@ -158,6 +250,20 @@ public class QSectionSurfaceView extends SherlockFragment{
 		
 		private SherlockFragment _activity;
 
+		/**
+		 * @return the _state
+		 */
+		public int get_state() {
+			return _state;
+		}
+
+		/**
+		 * @param _state the _state to set
+		 */
+		public void set_state(int _state) {
+			this._state = _state;
+		}
+
 		/*
          * Methods
          */
@@ -181,7 +287,7 @@ public class QSectionSurfaceView extends SherlockFragment{
 			MainActivity activity = (MainActivity)getActivity();
 			
 			mMap = createMap(activity.getDifficulty());
-			shuffelMap(mMap, 100);			
+			shuffelMap(mMap, SHUFFEL_ITERATIONS);			
 		}
 		
 		private int[][] createMap(int difficulty){
@@ -353,6 +459,11 @@ public class QSectionSurfaceView extends SherlockFragment{
 				_textPaint = new Paint();
 				_textPaint.setColor(Color.WHITE);
 				
+				_numberPaint = new Paint();
+				_numberPaint.setColor(Color.WHITE);
+				_numberPaint.setShadowLayer(0.5f, 0.25f, 0.25f, Color.DKGRAY);
+				
+				
 				_touchOnePaint = new Paint();
 				_touchOnePaint.setColor(Color.MAGENTA);
 				
@@ -385,6 +496,11 @@ public class QSectionSurfaceView extends SherlockFragment{
 		
 		private void updateInputs(){
 			MainActivity activity = (MainActivity)getActivity();
+			Bitmap bmp = activity.getSelectedImageBitmap();
+			
+			if ((mMap == null) || (bmp == null))
+				return;
+
 			int numTiles = mMap[0].length;
 
 			int viewHeight = this.getHeight();
@@ -393,7 +509,6 @@ public class QSectionSurfaceView extends SherlockFragment{
 			int tileWidth = viewWidth / numTiles;
 			int tileHeight = viewHeight / numTiles;
 					
-			Bitmap bmp = activity.getSelectedImageBitmap();
 			int bmpHeight = bmp.getHeight();
 			int bmpWidth = bmp.getWidth();
 			
@@ -425,15 +540,19 @@ public class QSectionSurfaceView extends SherlockFragment{
 		}
 		
 		private void doDrawTiles(Canvas canvas){
-			// Draw the tiles
+
+			MainActivity activity = (MainActivity)getActivity();
+			Bitmap bmp = activity.getSelectedImageBitmap();
 			
+			if ((mMap == null) || (bmp == null))
+				return;
+			
+			// Draw the tiles			
 			int viewHeight = this.getHeight();
 			int viewWidth = this.getWidth();
 			
-			MainActivity activity = (MainActivity)getActivity();
 			int numTiles = mMap[0].length;
 			
-			Bitmap bmp = activity.getSelectedImageBitmap();
 			int bmpHeight = bmp.getHeight();
 			int bmpWidth = bmp.getWidth();
 			
@@ -446,6 +565,21 @@ public class QSectionSurfaceView extends SherlockFragment{
 			Rect rectScreen = new Rect();
 			Rect rectAtlas = new Rect();
 			
+			if (get_state() == STATE_SHOWHINT){
+				rectAtlas.top = 0;
+				rectAtlas.bottom = bmpHeight;
+				rectAtlas.left = 0;
+				rectAtlas.right = bmpWidth;
+			
+				rectScreen.top = 0;
+				rectScreen.bottom = viewHeight;
+				rectScreen.left = 0;
+				rectScreen.right = viewWidth;
+				
+				canvas.drawBitmap(bmp, rectAtlas, rectScreen, null);				
+			}
+			else
+			{
 			boolean isEmpty;
 			
 			if (mMap != null){
@@ -477,9 +611,10 @@ public class QSectionSurfaceView extends SherlockFragment{
 							canvas.drawBitmap(bmp, rectAtlas, rectScreen, null);
 
 						canvas.drawText(String.valueOf(mMap[x][y]), 
-								rectScreen.left, rectScreen.top+10, _textPaint);
+								rectScreen.left, rectScreen.top+10, _numberPaint);
 					}
 				}
+			}
 			}
 		}
 		

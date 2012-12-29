@@ -1,12 +1,16 @@
 package com.example.qart;
 
+import java.util.Random;
+
 import android.app.Activity;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.provider.MediaStore.Images.ImageColumns;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -23,7 +27,11 @@ public class QSectionSelectPicture extends SherlockFragment{
     public static final String ARG_SECTION_NUMBER = "section_number";
     
     private Button mLoadButton;
+    private Button mRandomButton;
     private ImageView mImageView;
+    
+    private Random rand;
+    
     //private Uri mSelectedImageUri;
 
     /* (non-Javadoc)
@@ -71,14 +79,12 @@ public class QSectionSelectPicture extends SherlockFragment{
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
             Bundle savedInstanceState) {
 
+    	rand = new Random();
+    	
 		MainActivity activity = (MainActivity)getActivity();
 
 		View VPicSelect = inflater.inflate(R.layout.section_one, container, false);
-		
-//		TextView pwtextOne = (TextView) VPicSelect.findViewById(R.id.textView1);
-//		Bundle args = getArguments();
-//		pwtextOne.setText(Integer.toString(args.getInt(ARG_SECTION_NUMBER)));
-		
+				
 		mImageView = (ImageView) VPicSelect.findViewById(R.id.imageView);
 		if (activity.getSelectedImageUri() != null){
 			mImageView.setImageURI(activity.getSelectedImageUri());
@@ -97,8 +103,52 @@ public class QSectionSelectPicture extends SherlockFragment{
 		        Log.d("DEBUG:", "Code: " + MainActivity.REQUEST_CHOOSE_IMAGE);
 			}
 		});
+
+		mRandomButton = (Button) VPicSelect.findViewById(R.id.btnRandomImage);
 		
+		mRandomButton.setOnClickListener(new View.OnClickListener() {
+			public void onClick(View v) {
+				getRandomImage();
+		        Log.d("DEBUG:", "random image");
+			}
+		});
+
 		return VPicSelect;
+    }
+    
+    public Uri getRandomImage(){
+		ContentResolver cr = getActivity().getContentResolver();
+
+		String[] columns = new String[] {
+		                ImageColumns._ID,
+		                ImageColumns.TITLE,
+		                ImageColumns.DATA,
+		                ImageColumns.MIME_TYPE,
+		                ImageColumns.SIZE };
+		Cursor cur = cr.query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+		                columns, null, null, null);
+
+		int numImages = cur.getCount();
+		int selImage = rand.nextInt(numImages);
+		
+		cur.move(selImage);
+		
+		int    imageID = cur.getInt(0);
+		String strTitle = cur.getString(1);
+		String strData = cur.getString(2);
+		
+		Uri uri = Uri.withAppendedPath( MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                Integer.toString(imageID) );
+
+		cur.close();
+		
+    	mImageView.setImageURI(uri);
+    	
+    	MainActivity activity = (MainActivity)getActivity();
+    	activity.setSelectedImageUri(uri);
+
+		return uri;
+    	
     }
 	
 	@Override

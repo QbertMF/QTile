@@ -12,7 +12,6 @@ import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.view.Display;
 import android.view.Gravity;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
@@ -21,6 +20,8 @@ import com.actionbarsherlock.app.ActionBar;
 import com.actionbarsherlock.app.ActionBar.Tab;
 import com.actionbarsherlock.app.SherlockFragment;
 import com.actionbarsherlock.app.SherlockFragmentActivity;
+import com.actionbarsherlock.view.Menu;
+import com.actionbarsherlock.view.MenuInflater;
 import com.example.qactionbar3.R;
 
 public class MainActivity extends SherlockFragmentActivity implements ActionBar.TabListener {
@@ -49,7 +50,6 @@ public class MainActivity extends SherlockFragmentActivity implements ActionBar.
 	public Bitmap getSelectedImageBitmap() {
 		return mSelectedImageBitmap;
 	}
-
 
 	/**
 	 * @return the mDifficulty
@@ -101,6 +101,16 @@ public class MainActivity extends SherlockFragmentActivity implements ActionBar.
 		    }
 		    return returnBmp;
 		  }
+
+		/* (non-Javadoc)
+		 * @see com.actionbarsherlock.app.SherlockFragmentActivity#onCreateOptionsMenu(com.actionbarsherlock.view.Menu)
+		 */
+		@Override
+		public boolean onCreateOptionsMenu(Menu menu) {
+		    MenuInflater inflater = this.getSupportMenuInflater();
+		    inflater.inflate(R.menu.activity_main, menu);
+		    return true;
+		}
 
 	
     /**
