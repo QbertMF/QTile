@@ -9,22 +9,15 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
-import android.hardware.Sensor;
-import android.hardware.SensorManager;
 import android.os.Bundle;
-import android.os.PowerManager;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
-import android.view.ViewGroup;
-import android.view.Window;
-import android.view.WindowManager;
 import android.view.View.OnTouchListener;
-import android.widget.TextView;
+import android.view.ViewGroup;
 
 import com.actionbarsherlock.app.SherlockFragment;
 import com.actionbarsherlock.view.Menu;
@@ -46,7 +39,6 @@ public class QSectionSurfaceView extends SherlockFragment{
 	public static final String ARG_SECTION_NUMBER = "section_number";
 
 	private FastRenderView renderView;
-	private Activity mActivity;
 	
 	private int mState = STATE_NORMAL;
 	
@@ -102,7 +94,6 @@ public class QSectionSurfaceView extends SherlockFragment{
 	 */
 	@Override
 	public void onPrepareOptionsMenu(Menu menu) {
-		// TODO Auto-generated method stub
 		super.onPrepareOptionsMenu(menu);
 	}
 
@@ -114,7 +105,8 @@ public class QSectionSurfaceView extends SherlockFragment{
 
     switch (item.getItemId()) {
     	case RESTART_ID:
-    		renderView.shuffelMap(mMap, SHUFFEL_ITERATIONS);
+    		renderView.setupMap();
+    		//renderView.shuffelMap(mMap, SHUFFEL_ITERATIONS);
         	return true;
     	case HINT_ID:	
     		if (renderView.get_state() == FastRenderView.STATE_RUNNING)
@@ -210,6 +202,8 @@ public class QSectionSurfaceView extends SherlockFragment{
 		public static final int STATE_RUNNING = 4;
 		public static final int STATE_WIN = 5;
 		public static final int STATE_SHOWHINT = 6;
+		
+		private static final boolean DEBUG_OUTPUT = true;
         
 		private static final float TILE_NUMBER_TEXT_SIZE = 20f;
 		/*
@@ -223,10 +217,14 @@ public class QSectionSurfaceView extends SherlockFragment{
 		private int _screenWidth = -1;
 		private Paint _backgroundPaint;
 		private Paint _textPaint;
+		private Paint _linePaint;
 		private Paint _numberPaint;
 		private Paint _touchOnePaint;
 		private Paint _touchTwoPaint;
 		private Paint _touchThreePaint;
+		
+		private int _moves;
+		private long _time;
 		
 		private long _elapsed = 0;
 				
@@ -238,18 +236,8 @@ public class QSectionSurfaceView extends SherlockFragment{
 		private long _accumulateSecond = 0;
 		private int _currentFrame = 0;
 		private int _backupFrame = 0;
-		private int _fps; 
-		
-		private int _shipPosX;
-		private int _shipPosY;
-		
+		private int _fps; 		
 		private Random rand;
-		
-		private int _scrollPrescaler = 0;
-		// debug only
-		private int _shipTile;
-		
-		private SherlockFragment _activity;
 
 		/**
 		 * @return the _state
@@ -285,24 +273,30 @@ public class QSectionSurfaceView extends SherlockFragment{
 		
 		protected void onStart(){
 			Log.w(this.getClass().getName(), "FastRenderView.onStart");
+			setupMap();
+		}
+		
+		public void setupMap(){
 			MainActivity activity = (MainActivity)getActivity();
 			
 			mMap = createMap(activity.getDifficulty());
-			shuffelMap(mMap, SHUFFEL_ITERATIONS);			
+			shuffelMap(mMap, SHUFFEL_ITERATIONS);
+			
+			_time = 0;
+			_moves = 0;			
 		}
 		
 		private int[][] createMap(int difficulty){
-			
 			int tiles;
 			switch (difficulty){
 			case 0:
-				tiles = 5;
+				tiles = 3;
 				break;
 			case 1:
-				tiles = 10;
+				tiles = 4;
 				break;
 			default:
-				tiles = 15;
+				tiles = 5;
 				break;
 			}
 			int[][] myMap = new int[tiles][tiles];
@@ -320,12 +314,30 @@ public class QSectionSurfaceView extends SherlockFragment{
 			return myMap;
 		}
 
+		private boolean isSolved(){
+			
+			int size = mMap[0].length;
+			
+			int curTile = 0;
+			
+			for (int x=0;x<size;x++){
+				for (int y=0;y<size;y++){
+					if ((x==size-1) && (y==size-1))
+						continue;
+					if (mMap[x][y] != curTile) {
+						return false;
+					}
+					curTile++;
+				}				
+			}
+			return true;
+		}
+		
 		private void shuffelMap(int[][] map, int iterations){
 			for (int i=0; i<iterations; i++){
 
 				int size = map[0].length;
-				
-				boolean found = false;
+
 				int x = 0;
 				int y = 0;
 
@@ -379,6 +391,8 @@ public class QSectionSurfaceView extends SherlockFragment{
 			if ((x2>=0) && (x2<size) && (y2>=0) && (y2<size)) {
 				map[x1][y1] = map[x2][y2];
 				map [x2][y2] = -1;
+				
+				_moves++;
 			}
 		}
 		
@@ -422,13 +436,26 @@ public class QSectionSurfaceView extends SherlockFragment{
 				try {
 					_surfaceHolderCanvas = _surfaceHolder.lockCanvas(null);
 					synchronized (_surfaceHolder) {
-						updateInputs();
 						
-						updatePhysics();
+						// Check  if a restart is required
+						MainActivity activity = (MainActivity)getActivity();
 						
-						doDraw(_surfaceHolderCanvas);
-						_currentFrame++;
+						if (activity.isSettingsChanged()){
+							setupMap();
+//							mMap = createMap(activity.getDifficulty());
+//							shuffelMap(mMap, SHUFFEL_ITERATIONS);
+							activity.setSettingsChanged(false);
+						}
 						
+						boolean visible = getUserVisibleHint();			
+						if (visible){
+							updateInputs();
+							
+							updatePhysics();
+							
+							doDraw(_surfaceHolderCanvas);
+							_currentFrame++;
+						}
 					}
 				} finally {
 					// do this in a finally so that if an exception is thrown
@@ -459,7 +486,10 @@ public class QSectionSurfaceView extends SherlockFragment{
 				
 				_textPaint = new Paint();
 				_textPaint.setColor(Color.WHITE);
-				
+
+				_linePaint = new Paint();
+				_linePaint.setColor(Color.GRAY);
+
 				_numberPaint = new Paint();
 				_numberPaint.setColor(Color.WHITE);
 				_numberPaint.setTextSize(TILE_NUMBER_TEXT_SIZE);
@@ -487,23 +517,30 @@ public class QSectionSurfaceView extends SherlockFragment{
 			if (_touched[2] == true)
 				canvas.drawCircle(_touchX[2], _touchY[2], 15, _touchThreePaint);
 
-			// Text Output
-			canvas.drawRect(20, 0, 100, 180, _backgroundPaint);
-			
-
-			canvas.drawText(String.valueOf(_screenHeight), 20, 50, _textPaint);
-			canvas.drawText(String.valueOf(_screenWidth), 20, 60, _textPaint);
-
-			canvas.drawText(String.valueOf(_fps), 20, 80, _textPaint);
-			
 			doDrawTiles(canvas);
+			
+			// Text Output
+			//canvas.drawRect(20, 0, 100, 180, _backgroundPaint);
+			
+			if (DEBUG_OUTPUT){
+				canvas.drawText(String.valueOf(_screenHeight), 20, 50, _textPaint);
+				canvas.drawText(String.valueOf(_screenWidth), 20, 60, _textPaint);
+				
+				canvas.drawText(String.valueOf(_fps), 20, 80, _textPaint);
+
+				canvas.drawText(String.valueOf(_moves), 20, 100, _textPaint);
+			
+				boolean solved = isSolved();
+				canvas.drawText(String.valueOf(solved), 20, 110, _textPaint);
+			}
+			
 		}
 		
 		private void updateInputs(){
 			MainActivity activity = (MainActivity)getActivity();
 			Bitmap bmp = activity.getSelectedImageBitmap();
 			
-			if ((mMap == null) || (bmp == null))
+			if ((mMap == null) || (bmp == null) || bmp.isRecycled())
 				return;
 
 			int numTiles = mMap[0].length;
@@ -515,10 +552,7 @@ public class QSectionSurfaceView extends SherlockFragment{
 			int tileHeight = viewHeight / numTiles;
 					
 			int bmpHeight = bmp.getHeight();
-			int bmpWidth = bmp.getWidth();
-			
-			float xFactor = (float)viewWidth / (float)bmpWidth;
-			float yFactor = (float)viewHeight / (float)bmpHeight;			
+			int bmpWidth = bmp.getWidth();			
 
 			if (_touched[0] == true){
 				
@@ -549,7 +583,7 @@ public class QSectionSurfaceView extends SherlockFragment{
 			MainActivity activity = (MainActivity)getActivity();
 			Bitmap bmp = activity.getSelectedImageBitmap();
 			
-			if ((mMap == null) || (bmp == null))
+			if ((mMap == null) || (bmp == null) || bmp.isRecycled())
 				return;
 			
 			// Draw the tiles			
@@ -563,6 +597,9 @@ public class QSectionSurfaceView extends SherlockFragment{
 			
 			float xFactor = (float)viewWidth / (float)bmpWidth;
 			float yFactor = (float)viewHeight / (float)bmpHeight;			
+			
+			int tileWidthView = viewWidth / numTiles;
+			int tileHeightView = viewHeight / numTiles;
 			
 			int tileWidth = bmpWidth / numTiles;
 			int tileHeight = bmpHeight / numTiles;
@@ -605,27 +642,40 @@ public class QSectionSurfaceView extends SherlockFragment{
 							rectAtlas.right = sX * tileWidth + tileWidth;
 						}
 						
-						rectScreen.top = (int)((float)(y*tileHeight) * yFactor);
-						rectScreen.bottom = (int)((float)(y*tileHeight + tileHeight) * yFactor);
-						rectScreen.left = (int)((float)(x*tileWidth) * xFactor);
-						rectScreen.right = (int)((float)(x*tileWidth + tileWidth) * xFactor);
+						rectScreen.top = (int)((float)(y*tileHeight) * yFactor + 0.5f);
+						rectScreen.bottom = (int)((float)(y*tileHeight + tileHeight) * yFactor + 0.5f);
+						rectScreen.left = (int)((float)(x*tileWidth) * xFactor + 0.5f);
+						rectScreen.right = (int)((float)(x*tileWidth + tileWidth) * xFactor + 0.5f);
 						
-						if (isEmpty)
+						if (isEmpty){
 							canvas.drawRect(rectScreen, _backgroundPaint);
-						else
+						}
+						else {
+							if (bmp.isRecycled())
+								return;
 							canvas.drawBitmap(bmp, rectAtlas, rectScreen, null);
+						}
 
-						canvas.drawText(String.valueOf(mMap[x][y]), 
-								rectScreen.left + TILE_NUMBER_TEXT_SIZE/8, 
-								rectScreen.top + TILE_NUMBER_TEXT_SIZE, 
-								_numberPaint);
+						if (activity.isShowNumbers()){
+							if (mMap[x][y] != -1){
+							canvas.drawText(String.valueOf(mMap[x][y] + 1), 
+									rectScreen.left + TILE_NUMBER_TEXT_SIZE/8, 
+									rectScreen.top + TILE_NUMBER_TEXT_SIZE, 
+									_numberPaint);
+							}
+						}
+					}
+				}
+				if (activity.isShowGrid()){
+					for (int x=0;x<size;x++){
+						canvas.drawLine(x*tileWidthView, 0, x*tileWidthView, bmpHeight, _linePaint);
+					}
+					for (int y=0;y<size;y++){
+						canvas.drawLine(0, y*tileHeightView, bmpWidth, y*tileHeightView, _linePaint);
 					}
 				}
 			}
 			}
-		}
-		
-		private void doProcess(){
 		}
 		
 		private void updatePhysics() {

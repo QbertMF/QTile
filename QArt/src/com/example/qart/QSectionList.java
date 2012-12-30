@@ -81,8 +81,34 @@ public class QSectionList extends SherlockListFragment {
 	@Override
 	public void onListItemClick(ListView l, View v, int position, long id) {
 		Log.i("QSectionList", "Item clicked: " + id);
-		
-		((MainActivity)getActivity()).setDifficulty((int)id);
+		MainActivity activity = (MainActivity)getActivity();
+				
+		switch ((int)id){
+		case 0:
+			if (activity.getDifficulty() != 0){
+				activity.setDifficulty(0);
+				activity.setSettingsChanged(true);
+			}
+			break;
+		case 1:
+			if (activity.getDifficulty() != 1){
+				activity.setDifficulty(1);
+				activity.setSettingsChanged(true);
+			}
+			break;
+		case 2:
+			if (activity.getDifficulty() != 2){
+				activity.setDifficulty(2);
+				activity.setSettingsChanged(true);
+			}
+			break;
+		case 3:
+			activity.setShowNumbers(!activity.isShowNumbers());
+			break;
+		case 4:
+			activity.setShowGrid(!activity.isShowGrid());
+			break;
+		}
 	}
 	
 	public void invalidate(){

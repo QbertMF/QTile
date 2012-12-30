@@ -15,19 +15,25 @@ import com.actionbarsherlock.app.ActionBar;
 import com.actionbarsherlock.app.ActionBar.Tab;
 import com.actionbarsherlock.app.SherlockFragmentActivity;
 import com.actionbarsherlock.view.Menu;
-import com.actionbarsherlock.view.MenuInflater;
 
 public class MainActivity extends SherlockFragmentActivity implements ActionBar.TabListener {
 
 	public static final int REQUEST_CHOOSE_IMAGE  = 1;
 	
+	// Settings
 	private int mDifficulty = 0;
+	private boolean mShowNumbers = true;
+	private boolean mShowGrid = false;
+	private boolean mSettingsChanged = false;
+	private boolean mSettingsChange = false;
 	
     public static final String[] SELECTION = 
     {
-            "Easy 3x3",   
+            "Easy 3x3",
             "Medium 4x4",
-            "Difficult 5x5" 
+            "Difficult 5x5",
+            "Toggle numbers",
+            "Toggle grid"
     };
 	// will be set when chooser activity returns
 //	private String mSelectedImagePath;
@@ -37,6 +43,62 @@ public class MainActivity extends SherlockFragmentActivity implements ActionBar.
     private Bitmap mSelectedImageBitmap;
 
     
+	/**
+	 * @return the mShowGrid
+	 */
+	public boolean isShowGrid() {
+		return mShowGrid;
+	}
+
+	/**
+	 * @param mShowGrid the mShowGrid to set
+	 */
+	public void setShowGrid(boolean mShowGrid) {
+		this.mShowGrid = mShowGrid;
+	}
+
+	/**
+	 * @return the mSettingsChange
+	 */
+	public boolean isSettingsChange() {
+		return mSettingsChange;
+	}
+
+	/**
+	 * @param mSettingsChange the mSettingsChange to set
+	 */
+	public void setSettingsChange(boolean mSettingsChange) {
+		this.mSettingsChange = mSettingsChange;
+	}
+
+	/**
+	 * @return the mSettingsChanged
+	 */
+	public boolean isSettingsChanged() {
+		return mSettingsChanged;
+	}
+
+	/**
+	 * @param mSettingsChanged the mSettingsChanged to set
+	 */
+	public void setSettingsChanged(boolean changed) {
+		this.mSettingsChanged = changed;
+	}
+
+	/**
+	 * @return the mShowNumbers
+	 */
+	public boolean isShowNumbers() {
+		return mShowNumbers;
+	}
+
+	/**
+	 * @param mShowNumbers the mShowNumbers to set
+	 */
+	public void setShowNumbers(boolean mShowNumbers) {
+		this.mShowNumbers = mShowNumbers;
+	}
+
 	/**
 	 * @return the mSelectedImageBitmap
 	 */
@@ -82,7 +144,7 @@ public class MainActivity extends SherlockFragmentActivity implements ActionBar.
 		    float dh = currentDisplay.getHeight();
 
 		    Bitmap returnBmp = Bitmap.createBitmap((int) dw, (int) dh,
-		        Bitmap.Config.ARGB_4444);
+		        Bitmap.Config.ARGB_8888);
 		    try {
 		      BitmapFactory.Options bmpFactoryOptions = new BitmapFactory.Options();
 		      bmpFactoryOptions.inJustDecodeBounds = true;
@@ -102,8 +164,8 @@ public class MainActivity extends SherlockFragmentActivity implements ActionBar.
 		 */
 		@Override
 		public boolean onCreateOptionsMenu(Menu menu) {
-		    MenuInflater inflater = this.getSupportMenuInflater();
-		    inflater.inflate(R.menu.activity_main, menu);
+//		    MenuInflater inflater = this.getSupportMenuInflater();
+//		    inflater.inflate(R.menu.activity_main, menu);
 		    return true;
 		}
 
@@ -170,15 +232,7 @@ public class MainActivity extends SherlockFragmentActivity implements ActionBar.
                             .setText(mSectionsPagerAdapter.getPageTitle(i))
                             .setTabListener(this));
         }
-        
-//        mSelectedImagePath = null;
     }
-
-//    @Override
-//    public boolean onCreateOptionsMenu(Menu menu) {
-//        getMenuInflater().inflate(R.menu.activity_main, menu);
-//        return true;
-//    }
 
 
     /**
@@ -200,7 +254,7 @@ public class MainActivity extends SherlockFragmentActivity implements ActionBar.
                 argsSecOne.putInt(QSectionSelectPicture.ARG_SECTION_NUMBER, i + 1);
                 fragmentOne.setArguments(argsSecOne);
                 return fragmentOne;
-        	case 2:
+        	case 1:
                 Fragment fragmentTwo = new QSectionSurfaceView();
                 Bundle argsSecTwo = new Bundle();
                 argsSecTwo.putInt(QSectionSurfaceView.ARG_SECTION_NUMBER, i + 1);
@@ -252,15 +306,12 @@ public class MainActivity extends SherlockFragmentActivity implements ActionBar.
 	@Override
 	public void onTabUnselected(Tab tab,
 			android.support.v4.app.FragmentTransaction ft) {
-		// TODO Auto-generated method stub
 		
 	}
 
 	@Override
 	public void onTabReselected(Tab tab,
 			android.support.v4.app.FragmentTransaction ft) {
-		// TODO Auto-generated method stub
-		
 	}
 
 }
