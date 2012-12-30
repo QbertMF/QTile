@@ -7,22 +7,15 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
-import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.view.Display;
-import android.view.Gravity;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.TextView;
 
 import com.actionbarsherlock.app.ActionBar;
 import com.actionbarsherlock.app.ActionBar.Tab;
-import com.actionbarsherlock.app.SherlockFragment;
 import com.actionbarsherlock.app.SherlockFragmentActivity;
 import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuInflater;
-import com.example.qactionbar3.R;
 
 public class MainActivity extends SherlockFragmentActivity implements ActionBar.TabListener {
 
@@ -32,9 +25,9 @@ public class MainActivity extends SherlockFragmentActivity implements ActionBar.
 	
     public static final String[] SELECTION = 
     {
-            "Easy",   
-            "Medium",
-            "Difficult" 
+            "Easy 3x3",   
+            "Medium 4x4",
+            "Difficult 5x5" 
     };
 	// will be set when chooser activity returns
 //	private String mSelectedImagePath;
@@ -75,9 +68,11 @@ public class MainActivity extends SherlockFragmentActivity implements ActionBar.
 	/**
 	 * @param mSelectedImageUri the mSelectedImageUri to set
 	 */
-	public void setSelectedImageUri(Uri mSelectedImageUri) {
-		this.mSelectedImageUri = mSelectedImageUri;
-		this.mSelectedImageBitmap = loadBitmap(mSelectedImageUri);
+	public void setSelectedImageUri(Uri selectedImageUri) {
+		this.mSelectedImageUri = selectedImageUri;
+		if (mSelectedImageBitmap != null)
+			mSelectedImageBitmap.recycle();
+		mSelectedImageBitmap = loadBitmap(mSelectedImageUri);
 	}
 	
 	  private Bitmap loadBitmap(Uri imageFileUri) {
@@ -239,7 +234,6 @@ public class MainActivity extends SherlockFragmentActivity implements ActionBar.
 	@Override
 	public void onTabSelected(Tab tab,
 			android.support.v4.app.FragmentTransaction ft) {
-		// TODO Auto-generated method stub
         mViewPager.setCurrentItem(tab.getPosition());
         
 //        boolean found = true;

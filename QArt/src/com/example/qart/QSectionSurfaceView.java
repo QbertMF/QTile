@@ -34,7 +34,7 @@ import com.actionbarsherlock.view.MenuItem;
 public class QSectionSurfaceView extends SherlockFragment{
 
     // Constants
-    static final int SHUFFEL_ITERATIONS = 100;
+    static final int SHUFFEL_ITERATIONS = 1000;
 
     static final int STATE_NORMAL = 1;
     static final int STATE_HINT = 2;
@@ -211,6 +211,7 @@ public class QSectionSurfaceView extends SherlockFragment{
 		public static final int STATE_WIN = 5;
 		public static final int STATE_SHOWHINT = 6;
         
+		private static final float TILE_NUMBER_TEXT_SIZE = 20f;
 		/*
          * Member (state) fields
          */
@@ -461,7 +462,11 @@ public class QSectionSurfaceView extends SherlockFragment{
 				
 				_numberPaint = new Paint();
 				_numberPaint.setColor(Color.WHITE);
-				_numberPaint.setShadowLayer(0.5f, 0.25f, 0.25f, Color.DKGRAY);
+				_numberPaint.setTextSize(TILE_NUMBER_TEXT_SIZE);
+				_numberPaint.setShadowLayer(TILE_NUMBER_TEXT_SIZE/2f, // radius 
+						                    TILE_NUMBER_TEXT_SIZE/8f, // dx
+						                    TILE_NUMBER_TEXT_SIZE/8f, // dy
+						                    Color.BLACK);
 				
 				
 				_touchOnePaint = new Paint();
@@ -611,7 +616,9 @@ public class QSectionSurfaceView extends SherlockFragment{
 							canvas.drawBitmap(bmp, rectAtlas, rectScreen, null);
 
 						canvas.drawText(String.valueOf(mMap[x][y]), 
-								rectScreen.left, rectScreen.top+10, _numberPaint);
+								rectScreen.left + TILE_NUMBER_TEXT_SIZE/8, 
+								rectScreen.top + TILE_NUMBER_TEXT_SIZE, 
+								_numberPaint);
 					}
 				}
 			}

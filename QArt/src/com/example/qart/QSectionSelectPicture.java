@@ -4,7 +4,6 @@ import java.util.Random;
 
 import android.app.Activity;
 import android.content.ContentResolver;
-import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
@@ -17,10 +16,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.TextView;
 
 import com.actionbarsherlock.app.SherlockFragment;
-import com.example.qactionbar3.R;
 
 public class QSectionSelectPicture extends SherlockFragment{
 	
@@ -28,6 +25,7 @@ public class QSectionSelectPicture extends SherlockFragment{
     
     private Button mLoadButton;
     private Button mRandomButton;
+    private Button mExampleButton;
     private ImageView mImageView;
     
     private Random rand;
@@ -55,6 +53,11 @@ public class QSectionSelectPicture extends SherlockFragment{
 	 */
 	@Override
 	public void onResume() {
+		MainActivity activity = (MainActivity)getActivity();
+				
+		if ((mImageView!=null) && (activity.getSelectedImageUri() != null)){
+			mImageView.setImageURI(activity.getSelectedImageUri());
+		}
 		super.onResume();
 	}
 
@@ -72,7 +75,6 @@ public class QSectionSelectPicture extends SherlockFragment{
 	@Override
 	public void onStop() {
 		super.onStop();
-		//renderView.onStop();
 	}
 	
     @Override
@@ -81,14 +83,13 @@ public class QSectionSelectPicture extends SherlockFragment{
 
     	rand = new Random();
     	
-		MainActivity activity = (MainActivity)getActivity();
-
 		View VPicSelect = inflater.inflate(R.layout.section_one, container, false);
 				
+//		MainActivity activity = (MainActivity)getActivity();
 		mImageView = (ImageView) VPicSelect.findViewById(R.id.imageView);
-		if (activity.getSelectedImageUri() != null){
-			mImageView.setImageURI(activity.getSelectedImageUri());
-		}
+//		if (activity.getSelectedImageUri() != null){
+//			mImageView.setImageURI(activity.getSelectedImageUri());
+//		}
 		
 		mLoadButton = (Button) VPicSelect.findViewById(R.id.btnLoadImage);
 		
@@ -108,15 +109,31 @@ public class QSectionSelectPicture extends SherlockFragment{
 		
 		mRandomButton.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
-				getRandomImage();
+				setRandomImage();
 		        Log.d("DEBUG:", "random image");
+			}
+		});
+
+		mExampleButton = (Button) VPicSelect.findViewById(R.id.btnExampleImage);
+		
+		mExampleButton.setOnClickListener(new View.OnClickListener() {
+			public void onClick(View v) {
+				setExampleImage();
+		        Log.d("DEBUG:", "example image");
 			}
 		});
 
 		return VPicSelect;
     }
     
-    public Uri getRandomImage(){
+    private void setExampleImage(){
+    	Uri uri = Uri.parse("android.resource://com.example.qart/" + R.drawable.cartoon_star);
+    	MainActivity activity = (MainActivity)getActivity();
+    	activity.setSelectedImageUri(uri);
+    	mImageView.setImageURI(uri);
+    }
+    
+    public void setRandomImage(){
 		ContentResolver cr = getActivity().getContentResolver();
 
 		String[] columns = new String[] {
@@ -128,14 +145,18 @@ public class QSectionSelectPicture extends SherlockFragment{
 		Cursor cur = cr.query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
 		                columns, null, null, null);
 
+		// if there are no images we give up
+		if (cur == null)
+			return;
+		
 		int numImages = cur.getCount();
 		int selImage = rand.nextInt(numImages);
 		
 		cur.move(selImage);
 		
 		int    imageID = cur.getInt(0);
-		String strTitle = cur.getString(1);
-		String strData = cur.getString(2);
+//		String strTitle = cur.getString(1);
+//		String strData = cur.getString(2);
 		
 		Uri uri = Uri.withAppendedPath( MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
                 Integer.toString(imageID) );
@@ -146,9 +167,6 @@ public class QSectionSelectPicture extends SherlockFragment{
     	
     	MainActivity activity = (MainActivity)getActivity();
     	activity.setSelectedImageUri(uri);
-
-		return uri;
-    	
     }
 	
 	@Override

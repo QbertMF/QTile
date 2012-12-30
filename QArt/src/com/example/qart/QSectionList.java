@@ -40,7 +40,7 @@ public class QSectionList extends SherlockListFragment {
 				android.R.layout.simple_list_item_1, MainActivity.SELECTION));
 	
 		ArrayAdapter<String> adapter = (ArrayAdapter<String>) getListAdapter();
-		adapter.notifyDataSetChanged();
+//		adapter.notifyDataSetChanged();
 	}
 
 	/* (non-Javadoc)
