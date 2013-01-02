@@ -73,7 +73,6 @@ public class QSectionList extends SherlockListFragment {
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
-		// TODO Auto-generated method stub
 		Log.i("QSectionList", "onCreateView");
 		return super.onCreateView(inflater, container, savedInstanceState);
 	}

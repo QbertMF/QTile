@@ -54,10 +54,16 @@ public class QSectionSelectPicture extends SherlockFragment{
 	@Override
 	public void onResume() {
 		MainActivity activity = (MainActivity)getActivity();
-				
-		if ((mImageView!=null) && (activity.getSelectedImageUri() != null)){
-			mImageView.setImageURI(activity.getSelectedImageUri());
+		
+		
+		if ((mImageView!=null) && (activity.getSelectedImageBitmap() != null)){
+			mImageView.setImageBitmap(activity.getSelectedImageBitmap());
 		}
+
+		
+//		if ((mImageView!=null) && (activity.getSelectedImageUri() != null)){
+//			mImageView.setImageURI(activity.getSelectedImageUri());
+//		}
 		super.onResume();
 	}
 

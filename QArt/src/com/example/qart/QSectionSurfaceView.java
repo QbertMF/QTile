@@ -238,6 +238,9 @@ public class QSectionSurfaceView extends SherlockFragment{
 		private int _backupFrame = 0;
 		private int _fps; 		
 		private Random rand;
+		
+		private float _trasX = 0f;
+		private float _trasY = 0f;
 
 		/**
 		 * @return the _state
@@ -258,7 +261,6 @@ public class QSectionSurfaceView extends SherlockFragment{
          */
 		public FastRenderView(Context context) {
 			super(context);
-//			 _activity = (SherlockFragment)context;
 			 
 			 setOnTouchListener(this);
 
@@ -404,8 +406,12 @@ public class QSectionSurfaceView extends SherlockFragment{
 			Log.w(this.getClass().getName(), "FastRenderView.onResume");
 			_threadRunning = true;
 			_renderThread = new Thread(this);
-			_renderThread.start();
+			int minPrio = Thread.MIN_PRIORITY;
+			int maxPrio = Thread.MAX_PRIORITY;
+			int midPrio = (maxPrio - minPrio) /2;
+			_renderThread.setPriority(midPrio);
 			startGame();
+			_renderThread.start();
 		}
 
 		protected void onPause() {
@@ -533,6 +539,9 @@ public class QSectionSurfaceView extends SherlockFragment{
 				boolean solved = isSolved();
 				canvas.drawText(String.valueOf(solved), 20, 110, _textPaint);
 			}
+			
+//			canvas.rotate(_trasX);
+//			_trasX += 1.0f;
 			
 		}
 		

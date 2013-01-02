@@ -10,6 +10,8 @@ import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.view.Display;
+import android.view.View;
+import android.view.ViewGroup;
 
 import com.actionbarsherlock.app.ActionBar;
 import com.actionbarsherlock.app.ActionBar.Tab;
@@ -19,7 +21,9 @@ import com.actionbarsherlock.view.Menu;
 public class MainActivity extends SherlockFragmentActivity implements ActionBar.TabListener {
 
 	public static final int REQUEST_CHOOSE_IMAGE  = 1;
-	
+
+	public static final String RETAIN_IMAGE_URI  = "image_uri";
+
 	// Settings
 	private int mDifficulty = 0;
 	private boolean mShowNumbers = true;
@@ -127,6 +131,15 @@ public class MainActivity extends SherlockFragmentActivity implements ActionBar.
 		return mSelectedImageUri;
 	}
 
+	/* (non-Javadoc)
+	 * @see com.actionbarsherlock.app.SherlockFragmentActivity#onSaveInstanceState(android.os.Bundle)
+	 */
+	@Override
+	protected void onSaveInstanceState(Bundle outState) {
+		super.onSaveInstanceState(outState);
+		outState.putString(RETAIN_IMAGE_URI, mSelectedImageUri.toString());
+	}
+	
 	/**
 	 * @param mSelectedImageUri the mSelectedImageUri to set
 	 */
@@ -177,22 +190,11 @@ public class MainActivity extends SherlockFragmentActivity implements ActionBar.
      * to switch to a {@link android.support.v4.app.FragmentStatePagerAdapter}.
      */
       SectionsPagerAdapter mSectionsPagerAdapter;
-//    FragmentStatePagerAdapter mSectionsPagerAdapter;
 
     /**
      * The {@link ViewPager} that will host the section contents.
      */
     ViewPager mViewPager;
-
-//	@Override
-//	protected void onRestart() {
-//		super.onRestart();
-//		if (mSelectedImagePath != null) {
-//			mImageString = mSelectedImagePath;
-//			//setPicture(mSelectedImagePath);
-//			mSelectedImagePath = null;
-//		}
-//	}
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -201,8 +203,6 @@ public class MainActivity extends SherlockFragmentActivity implements ActionBar.
         // Create the adapter that will return a fragment for each of the three primary sections
         // of the app.
         mSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
-
-//        mSectionsPagerAdapter = new FragmentStatePagerAdapter(getSupportFragmentManager());
         
         // Set up the action bar.
         final ActionBar actionBar = getSupportActionBar();
@@ -232,6 +232,12 @@ public class MainActivity extends SherlockFragmentActivity implements ActionBar.
                             .setText(mSectionsPagerAdapter.getPageTitle(i))
                             .setTabListener(this));
         }
+        
+        if (savedInstanceState != null){
+        	String str = savedInstanceState.getString(RETAIN_IMAGE_URI);
+        	mSelectedImageUri = Uri.parse(str);
+        	mSelectedImageBitmap = this.loadBitmap(mSelectedImageUri);
+        }
     }
 
 
@@ -241,7 +247,25 @@ public class MainActivity extends SherlockFragmentActivity implements ActionBar.
      */
     public class SectionsPagerAdapter extends FragmentPagerAdapter {
     	
-        public SectionsPagerAdapter(FragmentManager fm) {
+        /* (non-Javadoc)
+		 * @see android.support.v4.view.PagerAdapter#finishUpdate(android.view.View)
+		 */
+		@Override
+		public void finishUpdate(ViewGroup container) {
+			Log.v(this.getClass().getName(), "SectionsPagerAdapter.finishUpdate");
+			super.finishUpdate(container);
+		}
+
+		/* (non-Javadoc)
+		 * @see android.support.v4.view.PagerAdapter#startUpdate(android.view.View)
+		 */
+		@Override
+		public void startUpdate(ViewGroup container) {
+			Log.v(this.getClass().getName(), "SectionsPagerAdapter.startUpdate");
+			super.startUpdate(container);
+		}
+
+		public SectionsPagerAdapter(FragmentManager fm) {
             super(fm);
         }
 
@@ -288,19 +312,8 @@ public class MainActivity extends SherlockFragmentActivity implements ActionBar.
 	@Override
 	public void onTabSelected(Tab tab,
 			android.support.v4.app.FragmentTransaction ft) {
-        mViewPager.setCurrentItem(tab.getPosition());
-        
-//        boolean found = true;
-//        QSectionList mySection = null;
-//        try{
-//        	mySection = (QSectionList)mSectionsPagerAdapter.getItem(tab.getPosition());
-//        }catch (ClassCastException e){
-//        	found = false;
-//        }
-//        
-////        if (found && (mySection != null)){
-////        	mySection.invalidate();
-////        }
+		int pos = tab.getPosition();
+        mViewPager.setCurrentItem(pos);
 	}
 
 	@Override
