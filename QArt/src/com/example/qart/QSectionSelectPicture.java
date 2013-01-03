@@ -28,15 +28,14 @@ public class QSectionSelectPicture extends SherlockFragment{
     private Button mExampleButton;
     private ImageView mImageView;
     
-    private Random rand;
-    
-    //private Uri mSelectedImageUri;
+    private Random mRand;
 
     /* (non-Javadoc)
 	 * @see android.support.v4.app.Fragment#onDestroy()
 	 */
 	@Override
 	public void onDestroy() {
+		Log.w(this.getClass().getName(), "onDestroy");
 		super.onDestroy();
 	}
 
@@ -45,6 +44,7 @@ public class QSectionSelectPicture extends SherlockFragment{
 	 */
 	@Override
 	public void onPause() {
+		Log.w(this.getClass().getName(), "onPause");
 		super.onPause();
 	}
 
@@ -54,16 +54,12 @@ public class QSectionSelectPicture extends SherlockFragment{
 	@Override
 	public void onResume() {
 		MainActivity activity = (MainActivity)getActivity();
-		
-		
+		Log.w(this.getClass().getName(), "onResume");
+
 		if ((mImageView!=null) && (activity.getSelectedImageBitmap() != null)){
 			mImageView.setImageBitmap(activity.getSelectedImageBitmap());
 		}
 
-		
-//		if ((mImageView!=null) && (activity.getSelectedImageUri() != null)){
-//			mImageView.setImageURI(activity.getSelectedImageUri());
-//		}
 		super.onResume();
 	}
 
@@ -72,6 +68,7 @@ public class QSectionSelectPicture extends SherlockFragment{
 	 */
 	@Override
 	public void onStart() {
+		Log.w(this.getClass().getName(), "onStart");
 		super.onStart();
 	}
 
@@ -80,6 +77,7 @@ public class QSectionSelectPicture extends SherlockFragment{
 	 */
 	@Override
 	public void onStop() {
+		Log.w(this.getClass().getName(), "onStop");
 		super.onStop();
 	}
 	
@@ -87,15 +85,15 @@ public class QSectionSelectPicture extends SherlockFragment{
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
             Bundle savedInstanceState) {
 
-    	rand = new Random();
+    	super.onCreateView(inflater, container, savedInstanceState);
+    	
+		Log.w(this.getClass().getName(), "onCreateView");
+    	
+		mRand = new Random();
     	
 		View VPicSelect = inflater.inflate(R.layout.section_one, container, false);
 				
-//		MainActivity activity = (MainActivity)getActivity();
 		mImageView = (ImageView) VPicSelect.findViewById(R.id.imageView);
-//		if (activity.getSelectedImageUri() != null){
-//			mImageView.setImageURI(activity.getSelectedImageUri());
-//		}
 		
 		mLoadButton = (Button) VPicSelect.findViewById(R.id.btnLoadImage);
 		
@@ -156,7 +154,7 @@ public class QSectionSelectPicture extends SherlockFragment{
 			return;
 		
 		int numImages = cur.getCount();
-		int selImage = rand.nextInt(numImages);
+		int selImage = mRand.nextInt(numImages);
 		
 		cur.move(selImage);
 		

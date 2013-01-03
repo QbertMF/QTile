@@ -132,8 +132,8 @@ public class QSectionSurfaceView extends SherlockFragment{
 	 */
 	@Override
 	public void onPause() {
-		super.onPause();
 		renderView.onPause();
+		super.onPause();
 	}
 
 	/* (non-Javadoc)
@@ -141,8 +141,8 @@ public class QSectionSurfaceView extends SherlockFragment{
 	 */
 	@Override
 	public void onResume() {
-		super.onResume();
 		renderView.onResume();
+		super.onResume();
 	}
 
 	/* (non-Javadoc)
@@ -150,8 +150,8 @@ public class QSectionSurfaceView extends SherlockFragment{
 	 */
 	@Override
 	public void onStart() {
-		super.onStart();
 		renderView.onStart();
+		super.onStart();
 	}
 
 	/* (non-Javadoc)
@@ -159,8 +159,8 @@ public class QSectionSurfaceView extends SherlockFragment{
 	 */
 	@Override
 	public void onStop() {
+//		renderView.onStop();
 		super.onStop();
-		//renderView.onStop();
 	}
 	
     @Override
@@ -481,11 +481,9 @@ public class QSectionSurfaceView extends SherlockFragment{
 		private void doDraw(Canvas canvas){
 			// Get the screen resolution
 			if (_screenHeight == -1){
-				Log.w(this.getClass().getName(), "run - create scrollPane");
 
 				_screenHeight = canvas.getHeight();
 				_screenWidth = canvas.getWidth();
-
 				
 				_backgroundPaint = new Paint();
 				_backgroundPaint.setColor(0x770000FF);
